@@ -1,0 +1,40 @@
+# --- Core (always required) ---
+numpy>=1.24
+# opencv-contrib-python includes the `ximgproc` module (used for
+# edge-preserving guided filtering in the classical depth backbone).
+# Do NOT also install opencv-python / opencv-python-headless alongside
+# this — having more than one opencv-* package installed at once is a
+# common source of "module has no attribute" errors on Windows/conda.
+opencv-contrib-python>=4.8
+pillow>=10.0
+scipy>=1.10
+rasterio>=1.3
+affine>=2.4
+trimesh>=4.0
+pygltflib>=1.16
+shapely>=2.0
+mapbox_earcut>=1.0
+scikit-image>=0.22
+
+# --- API server ---
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+
+# --- Learned depth backbones (OPTIONAL — install for production accuracy) ---
+# Uncomment to enable the "auto" / "dpt_hybrid" / "dpt_large" / "midas_*" /
+# "depth_anything_v2_small" backbones in depthwizard.depth_model.
+# CPU-only installs are large (~0.7-3GB with CUDA deps on some platforms);
+# for a CPU-only footprint install torch from https://download.pytorch.org/whl/cpu
+# torch>=2.2
+# transformers>=4.38
+# timm>=0.9
+
+# --- GAMUS dataset tooling (OPTIONAL — see docs/DATASETS.md) ---
+# Needed only for backend/scripts/validate_on_gamus.py and
+# backend/scripts/finetune_on_gamus.py (the latter also needs torch+transformers above).
+# h5py>=3.10
+# huggingface_hub>=0.20
+
+# --- Testing ---
+pytest>=7.4

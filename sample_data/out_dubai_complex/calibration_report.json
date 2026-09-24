@@ -1,0 +1,11 @@
+{
+  "method": "relative_only",
+  "is_absolute": false,
+  "scale": 50.0,
+  "shift": 0.0,
+  "rmse": null,
+  "mae": null,
+  "r2": null,
+  "n_points": null,
+  "notes": "No georeference/DEM/GCPs supplied; output is a relative DSM (rDSM) scaled to a nominal relief range for visualization only."
+}

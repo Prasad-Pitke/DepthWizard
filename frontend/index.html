@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#08111f" />
+<title>DepthWizard — 3D Terrain Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 22.5 12.5 15l5 5L27 10.5M6 27h20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24.5" cy="10" r="2" fill="currentColor"/></svg>
+      </span>
+      <div class="brand-text">
+        <strong>DepthWizard</strong>
+        <span>3D TERRAIN STUDIO</span>
+      </div>
+    </div>
+    <div class="topbar-center"><span class="live-dot"></span> Local processing workspace</div>
+    <div class="topbar-actions">
+      <span id="job-status-pill" class="pill hidden"></span>
+      <button id="btn-toggle-panel" class="btn-ghost"><span class="menu-icon">☰</span> Controls</button>
+    </div>
+  </header>
+
+  <aside id="panel">
+    <div class="panel-intro">
+      <div>
+        <span class="eyebrow">PROJECT WORKSPACE</span>
+        <h1>Build a 3D scene</h1>
+      </div>
+      <div class="panel-intro-actions"><span class="step-count">01—05</span><button id="btn-panel-minimize" class="panel-minimize" type="button" title="Minimize controls"><span>⌄</span> Minimize</button></div>
+    </div>
+
+    <section class="panel-section">
+      <div class="section-title"><span class="section-num">01</span><div><h2>Input imagery</h2><small>Source satellite, drone or aerial imagery</small></div></div>
+      <div id="dropzone" class="dropzone">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p><strong>Drop an image here</strong><br><span>PNG, JPG or GeoTIFF</span></p>
+        <button type="button" class="browse-label">Browse files</button>
+        <input type="file" id="file-image" accept=".png,.jpg,.jpeg,.tif,.tiff" hidden />
+      </div>
+      <div id="file-image-name" class="file-name"></div>
+    </section>
+
+    <section class="panel-section">
+      <div class="section-title"><span class="section-num">02</span><div><h2>Depth backbone</h2><small>Choose the depth estimation engine</small></div></div>
+      <select id="select-backbone">
+        <option value="auto">Auto — learned model / fallback</option>
+        <option value="depth_anything_v2_small">Depth-Anything-V2 (small)</option>
+        <option value="dpt_hybrid">DPT-Hybrid (MiDaS)</option>
+        <option value="dpt_large">DPT-Large (MiDaS)</option>
+        <option value="classical" selected>Classical relief estimator</option>
+      </select>
+      <p class="hint">Classical runs locally without a model download. Learned backbones can improve depth estimation on suitable scenes.</p>
+    </section>
+
+    <section class="panel-section" id="section-georef">
+      <div class="section-title"><span class="section-num">03</span><div><h2>Scale calibration <em>optional</em></h2><small>GeoTIFF reference for absolute elevation</small></div></div>
+      <label class="radio-row"><input type="radio" name="calib-mode" value="none" checked /><span><b>Relative DSM</b><small>No reference needed</small></span></label>
+      <label class="radio-row"><input type="radio" name="calib-mode" value="dem" /><span><b>Reference DEM</b><small>SRTM or other coarse DEM</small></span></label>
+      <div class="indent hidden" id="calib-dem-row"><input type="file" id="file-dem" accept=".tif,.tiff" /></div>
+      <label class="radio-row"><input type="radio" name="calib-mode" value="gcp" /><span><b>Ground control points</b><small>CSV: row, col, elevation</small></span></label>
+      <div class="indent hidden" id="calib-gcp-row"><input type="file" id="file-gcps" accept=".csv" /></div>
+    </section>
+
+    <section class="panel-section">
+      <div class="section-title"><span class="section-num">04</span><div><h2>Reconstruction</h2><small>Shape, scale and mesh density</small></div></div>
+      <div class="mode-cards">
+        <label class="mode-card"><input type="radio" name="recon-mode" value="relief" checked /><span class="mode-card-icon">⌁</span><span><b>Continuous relief</b><small>Terrain, hills &amp; slopes</small></span></label>
+        <label class="mode-card"><input type="radio" name="recon-mode" value="buildings" /><span class="mode-card-icon">▦</span><span><b>Building blocks</b><small>Urban footprints &amp; extrusion</small></span></label>
+      </div>
+      <div id="building-height-controls" class="indent hidden control-box">
+        <label class="slider-row">Min building height <span id="val-building-min">4 m</span><input type="range" id="range-building-min" min="1" max="30" step="1" value="4" /></label>
+        <label class="slider-row">Max building height <span id="val-building-max">25 m</span><input type="range" id="range-building-max" min="10" max="120" step="1" value="25" /></label>
+      </div>
+      <label class="slider-row" id="row-exaggeration">Vertical exaggeration <span id="val-exaggeration">1.5×</span><input type="range" id="range-exaggeration" min="0.5" max="6" step="0.1" value="1.5" /></label>
+      <label class="slider-row">Mesh resolution <span id="val-mesh-res">512</span><input type="range" id="range-mesh-res" min="128" max="1024" step="64" value="512" /></label>
+    </section>
+
+    <button id="btn-process" class="btn-primary" disabled><span>Generate 3D terrain</span><span class="arrow">↗</span></button>
+    <div id="progress-log" class="progress-log hidden"></div>
+
+    <div class="panel-footer">DEPTHWIZARD <span>•</span> LOCAL WORKSPACE</div>
+  </aside>
+
+  <aside id="results-rail" aria-label="Scene results">
+    <button id="btn-results-rail-toggle" class="results-rail-toggle" type="button" aria-expanded="true" title="Collapse results panel">‹</button>
+    <section class="panel-section results-section" id="section-results" hidden>
+      <div class="section-title"><span class="section-num success-num">✓</span><div><h2>Output ready</h2><small>Your generated scene is available</small></div></div>
+      <div id="results-summary"></div>
+      <div class="btn-row"><a id="dl-dsm" class="btn-secondary" download>DSM <span>↓</span></a><a id="dl-glb" class="btn-secondary" download>Mesh <span>↓</span></a></div>
+    </section>
+
+    <section class="panel-section" id="section-previews" hidden>
+      <div class="section-title"><span class="section-num">↗</span><div><h2>Analysis maps</h2><small>Inspect generated elevation layers</small></div></div>
+      <div class="preview-grid">
+        <div class="preview-item"><span>RAW DEPTH</span><img id="preview-depth" alt="Depth map preview" /></div>
+        <div class="preview-item"><span>HEIGHT MAP</span><img id="preview-height" alt="Height map preview" /></div>
+        <div class="preview-item"><span>ELEVATION</span><img id="preview-colormap" alt="Height map colormap" /></div>
+      </div>
+    </section>
+
+    <section class="panel-section" id="section-validate" hidden>
+      <div class="section-title"><span class="section-num">05</span><div><h2>Validate</h2><small>Compare against an independent reference</small></div></div>
+      <p class="hint">Upload a LiDAR DSM or DEM to calculate RMSE, MAE and correlation.</p>
+      <input type="file" id="file-validate-ref" accept=".tif,.tiff" />
+      <button id="btn-validate" class="btn-secondary full-btn">Run validation <span>→</span></button>
+      <div id="validation-results"></div>
+    </section>
+  </aside>
+
+  <main id="viewport-wrap">
+    <canvas id="viewport"></canvas>
+    <div class="viewport-gradient"></div>
+    <div id="viewport-hint" class="viewport-hint">
+      <div class="empty-orbit"><span>+</span></div>
+      <strong>Upload imagery to begin</strong>
+      <p>Your generated 3D terrain will appear here.</p>
+    </div>
+
+    <div id="hud" class="hud hidden">
+      <div class="hud-heading">SCENE TELEMETRY <span></span></div>
+      <div class="hud-row"><span>Mode</span><strong id="hud-mode">Orbit</strong></div>
+      <div class="hud-row"><span>Cursor elevation</span><strong id="hud-elev">—</strong></div>
+      <div class="hud-row"><span>Camera height</span><strong id="hud-cam-h">—</strong></div>
+    </div>
+
+    <div id="controls-help" class="controls-help hidden"><b>FLYTHROUGH</b><span>W A S D</span> move <span>SPACE / SHIFT</span> altitude <span>MOUSE</span> look <span>ESC</span> exit</div>
+
+    <div id="viewport-toolbar" class="viewport-toolbar hidden">
+      <button id="btn-mode-orbit" class="toolbar-btn active"><span>◉</span> Orbit</button>
+      <button id="btn-mode-fly" class="toolbar-btn"><span>⌖</span> Flythrough</button>
+      <button id="btn-wireframe" class="toolbar-btn">Wireframe</button>
+      <button id="btn-colormap" class="toolbar-btn">Elevation</button>
+      <button id="btn-reset-view" class="toolbar-btn">Reset</button>
+    </div>
+    <div class="viewport-label">DEPTHWIZARD / 3D VIEWPORT</div>
+  </main>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

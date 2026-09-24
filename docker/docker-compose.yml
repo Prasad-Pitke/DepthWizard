@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  depthwizard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: depthwizard:latest
+    container_name: depthwizard
+    ports:
+      - "8000:8000"
+    volumes:
+      - depthwizard_jobs:/data/jobs
+    restart: unless-stopped
+
+volumes:
+  depthwizard_jobs:

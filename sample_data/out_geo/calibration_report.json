@@ -1,0 +1,11 @@
+{
+  "method": "coarse_dem_affine",
+  "is_absolute": true,
+  "scale": -7.847624608499728,
+  "shift": 104.00331769095577,
+  "rmse": 12.507336044871273,
+  "mae": 10.487242763861323,
+  "r2": 0.02238208841449696,
+  "n_points": 65536,
+  "notes": "Low-frequency component anchored to coarse reference DEM; high-frequency detail from the vision backbone scaled by the same factor."
+}

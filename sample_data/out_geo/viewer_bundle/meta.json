@@ -1,0 +1,9 @@
+{
+  "elevation_min_m": 96.15569305419922,
+  "elevation_max_m": 104.0033187866211,
+  "horizontal_scale_m": 2.0,
+  "vertical_exaggeration": 1.0,
+  "width_px": 256,
+  "height_px": 256,
+  "mesh_resolution": 512
+}
